@@ -16,7 +16,7 @@ public class TestService {
         return "manager task";
     }
 
-    @PreAuthorize("hasAuthority('USER_READ')")
+    @PreAuthorize("hasAuthority('USER')")
     public String readTask() {
         return "read task";
     }

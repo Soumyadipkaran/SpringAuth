@@ -4,22 +4,45 @@ import com.example.demoSecurity.Service.TestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demoSecurity.model.AppUser;
+import com.example.demoSecurity.repository.AppUserRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 
 @RestController
 public class TestController {
 
     @Autowired
+    private AppUserRepository repo;
+
+    @Autowired
     private TestService testService;
 
-    @GetMapping("/public/test")
-    public String Test() {
-        return "Working On Port 8081";
+    @Autowired
+    private BCryptPasswordEncoder Bencoder;
+
+    @PostMapping("/signup")
+    public String signup(@RequestBody AppUser user) {
+        user.setPassword(Bencoder.encode(user.getPassword()));
+        if (user.getRole() == null) user.setRole("USER");
+        repo.save(user);
+        return "User created successfully!";
     }
 
 
 
-    @GetMapping("/public/hello")
+    @GetMapping("/port")
+    public String Test() {
+        return "Working";
+    }
+
+
+
+    @GetMapping("/public/test")
     public String publicHello() {
         return "public";
     }

@@ -1,48 +1,24 @@
 package com.example.demoSecurity.config;
 
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 public class SecurityConfig {
 
+    @Autowired
+    private CustomUserDetailsService uds;
+
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder encoder) {
-
-        UserDetails admin = User.withUsername("admin")
-                .password(encoder.encode("admin123"))
-                .roles("ADMIN")
-                .build();
-
-        UserDetails manager = User.withUsername("manager")
-                .password(encoder.encode("manager123"))
-                .roles("MANAGER")
-                .build();
-
-        UserDetails user = User.withUsername("soumyadip")
-                .password(encoder.encode("12345"))
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, manager, user);
     }
 
     @Bean
@@ -51,11 +27,22 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable());
 
         http.authorizeHttpRequests(auth -> auth
+                // explicitly allow GET method for /port
+                .requestMatchers("/port").permitAll()
                 .requestMatchers("/public/**").permitAll()
+                .requestMatchers("/signup").permitAll()
                 .anyRequest().authenticated()
         );
 
-        http.httpBasic();
+        // Attach userDetailsService with password encoder
+        http.userDetailsService(uds);
+        //passwordEncoder.matches(rawPassword, hashedPassword)
+
+
+        // Enable HTTP Basic authentication
+        http.httpBasic(httpSecurityHttpBasicConfigurer -> {});
+
+        System.out.println("SecurityFilterChain applied!");
 
         return http.build();
     }
